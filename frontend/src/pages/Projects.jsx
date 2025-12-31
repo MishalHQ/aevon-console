@@ -1,4 +1,4 @@
-// Projects page
+// Projects page - Real Projects Only (Non-Demo)
 import React, { useState, useEffect } from 'react';
 import { projectsAPI } from '../services/api';
 import ProjectCard from '../components/ProjectCard';
@@ -18,7 +18,9 @@ function Projects() {
   const fetchProjects = async () => {
     try {
       const response = await projectsAPI.getAll();
-      setProjects(response.data);
+      // Filter out demo projects - show only real projects
+      const realProjects = response.data.filter(project => !project.is_demo);
+      setProjects(realProjects);
     } catch (err) {
       setError('Failed to load projects');
       console.error(err);
@@ -53,13 +55,16 @@ function Projects() {
 
   const handleSubmit = async (formData) => {
     try {
+      // Ensure is_demo is false for real projects
+      const projectData = { ...formData, is_demo: false };
+      
       if (editingProject) {
         // Update existing project
-        const response = await projectsAPI.update(editingProject.id, formData);
+        const response = await projectsAPI.update(editingProject.id, projectData);
         setProjects(projects.map(p => p.id === editingProject.id ? response.data : p));
       } else {
         // Create new project
-        const response = await projectsAPI.create(formData);
+        const response = await projectsAPI.create(projectData);
         setProjects([response.data, ...projects]);
       }
       setShowForm(false);
@@ -84,7 +89,7 @@ function Projects() {
       <div className="page-header">
         <div>
           <h1>Projects</h1>
-          <p>Manage all your projects</p>
+          <p>Manage your real business projects</p>
         </div>
         <button onClick={handleCreate} className="btn-primary">
           + New Project
@@ -96,6 +101,9 @@ function Projects() {
       {projects.length === 0 ? (
         <div className="empty-state">
           <p>No projects yet. Create your first project!</p>
+          <p style={{ fontSize: '0.9rem', marginTop: '1rem', color: 'var(--netflix-light-gray)' }}>
+            Demo projects are shown in the Showcase section.
+          </p>
         </div>
       ) : (
         <div className="projects-grid">
