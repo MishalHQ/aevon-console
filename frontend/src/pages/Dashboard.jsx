@@ -15,12 +15,20 @@ function Dashboard() {
 
   const fetchStats = async () => {
     try {
+      setLoading(true);
+      setError('');
+      
       const response = await dashboardAPI.getStats();
-      console.log('Dashboard stats:', response.data); // Debug log
-      setStats(response.data);
+      console.log('Dashboard stats response:', response); // Debug log
+      
+      if (response && response.data) {
+        setStats(response.data);
+      } else {
+        throw new Error('Invalid response format');
+      }
     } catch (err) {
-      setError('Failed to load dashboard statistics');
       console.error('Dashboard error:', err);
+      setError(err.response?.data?.error || err.message || 'Failed to load dashboard statistics');
     } finally {
       setLoading(false);
     }
@@ -47,17 +55,34 @@ function Dashboard() {
       <div className="page-container">
         <div className="error-message">
           <h3>⚠️ {error}</h3>
+          <p>Please check:</p>
+          <ul>
+            <li>Backend server is running on port 5001</li>
+            <li>You are logged in</li>
+            <li>Database is initialized with demo data</li>
+          </ul>
           <button onClick={fetchStats} className="btn-primary">Retry</button>
         </div>
       </div>
     );
   }
 
-  // Format currency
+  if (!stats) {
+    return (
+      <div className="page-container">
+        <div className="error-message">
+          <h3>⚠️ No data available</h3>
+          <button onClick={fetchStats} className="btn-primary">Retry</button>
+        </div>
+      </div>
+    );
+  }
+
+  // Format currency in INR (₹)
   const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(amount || 0);
@@ -205,42 +230,46 @@ function Dashboard() {
           
           <div className="recent-activity-grid">
             {/* Recent Projects */}
-            <div className="activity-section">
-              <h3>Recent Projects</h3>
-              <div className="activity-list">
-                {stats.recentActivity.projects?.slice(0, 5).map((project) => (
-                  <div key={project.id} className="activity-item">
-                    <div className="activity-icon">📁</div>
-                    <div className="activity-content">
-                      <h4>{project.name}</h4>
-                      <p>{project.client_company || 'No client'} • {project.status}</p>
+            {stats.recentActivity.projects && stats.recentActivity.projects.length > 0 && (
+              <div className="activity-section">
+                <h3>Recent Projects</h3>
+                <div className="activity-list">
+                  {stats.recentActivity.projects.slice(0, 5).map((project) => (
+                    <div key={project.id} className="activity-item">
+                      <div className="activity-icon">📁</div>
+                      <div className="activity-content">
+                        <h4>{project.name}</h4>
+                        <p>{project.client_company || 'No client'} • {project.status}</p>
+                      </div>
+                      <span className={`status-badge status-${project.status.toLowerCase()}`}>
+                        {project.status}
+                      </span>
                     </div>
-                    <span className={`status-badge status-${project.status.toLowerCase()}`}>
-                      {project.status}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Recent Tasks */}
-            <div className="activity-section">
-              <h3>Recent Tasks</h3>
-              <div className="activity-list">
-                {stats.recentActivity.tasks?.slice(0, 5).map((task) => (
-                  <div key={task.id} className="activity-item">
-                    <div className="activity-icon">✓</div>
-                    <div className="activity-content">
-                      <h4>{task.title}</h4>
-                      <p>{task.project_name || 'No project'}</p>
+            {stats.recentActivity.tasks && stats.recentActivity.tasks.length > 0 && (
+              <div className="activity-section">
+                <h3>Recent Tasks</h3>
+                <div className="activity-list">
+                  {stats.recentActivity.tasks.slice(0, 5).map((task) => (
+                    <div key={task.id} className="activity-item">
+                      <div className="activity-icon">✓</div>
+                      <div className="activity-content">
+                        <h4>{task.title}</h4>
+                        <p>{task.project_name || 'No project'}</p>
+                      </div>
+                      <span className={`status-badge status-${task.status.toLowerCase().replace(' ', '-')}`}>
+                        {task.status}
+                      </span>
                     </div>
-                    <span className={`status-badge status-${task.status.toLowerCase().replace(' ', '-')}`}>
-                      {task.status}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </>
       )}
