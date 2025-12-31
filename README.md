@@ -2,6 +2,8 @@
 
 A clean, minimal, production-ready internal operations console for managing projects and showcasing demos.
 
+> **🍎 macOS Users:** See [MACOS_QUICKSTART.md](MACOS_QUICKSTART.md) for one-command setup!
+
 ## Features
 
 - **Authentication**: Simple email/password login
@@ -24,54 +26,35 @@ A clean, minimal, production-ready internal operations console for managing proj
 - Axios for API calls
 - Plain CSS (no frameworks)
 
-## Project Structure
+## Quick Start
 
-```
-aevon-console/
-├── backend/
-│   ├── src/
-│   │   ├── config/
-│   │   │   └── database.js
-│   │   ├── middleware/
-│   │   │   └── auth.js
-│   │   ├── routes/
-│   │   │   ├── auth.js
-│   │   │   ├── projects.js
-│   │   │   └── dashboard.js
-│   │   ├── models/
-│   │   │   └── init.js
-│   │   └── server.js
-│   ├── database.sqlite (auto-generated)
-│   ├── package.json
-│   └── .env
-├── frontend/
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── components/
-│   │   │   ├── Navbar.jsx
-│   │   │   ├── ProjectCard.jsx
-│   │   │   ├── ProjectForm.jsx
-│   │   │   └── StatCard.jsx
-│   │   ├── pages/
-│   │   │   ├── Login.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── Projects.jsx
-│   │   │   └── DemoShowcase.jsx
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   ├── App.jsx
-│   │   ├── App.css
-│   │   └── index.js
-│   ├── package.json
-│   └── .env
-└── README.md
+### 🍎 macOS (Recommended)
+
+```bash
+# Clone repository
+git clone https://github.com/MishalHQ/aevon-console.git
+cd aevon-console
+
+# Make scripts executable
+chmod +x setup.sh start.sh stop.sh fix.sh
+
+# Complete setup (handles everything)
+./setup.sh
+
+# Start application
+./start.sh
 ```
 
-## Installation & Setup
+**Requirements:** Node.js v20 LTS (see [MACOS_SETUP.md](MACOS_SETUP.md) for installation)
+
+### 🐧 Linux / 🪟 Windows
+
+See [Manual Installation](#manual-installation) below.
+
+## Manual Installation
 
 ### Prerequisites
-- Node.js (v16 or higher)
+- Node.js v20 LTS or higher
 - npm or yarn
 
 ### Step 1: Clone Repository
@@ -101,7 +84,7 @@ cp .env.example .env
 npm start
 ```
 
-Backend will run on `http://localhost:5000`
+Backend will run on `http://localhost:5001`
 
 ### Step 3: Setup Frontend
 
@@ -145,6 +128,15 @@ Frontend will run on `http://localhost:3000`
 - No login required
 - Displays all projects marked as demos
 
+## Utility Scripts (macOS/Linux)
+
+```bash
+./setup.sh   # Complete setup: clean, install, configure
+./start.sh   # Start both backend and frontend
+./stop.sh    # Stop all servers
+./fix.sh     # Quick fix for common issues (ports, env, db)
+```
+
 ## API Endpoints
 
 ### Authentication
@@ -161,6 +153,8 @@ Frontend will run on `http://localhost:3000`
 - `POST /api/projects` - Create project (protected)
 - `PUT /api/projects/:id` - Update project (protected)
 - `DELETE /api/projects/:id` - Delete project (protected)
+
+**Full API documentation:** [API.md](API.md)
 
 ## Database Schema
 
@@ -190,6 +184,52 @@ CREATE TABLE projects (
 );
 ```
 
+## Project Structure
+
+```
+aevon-console/
+├── backend/
+│   ├── src/
+│   │   ├── config/database.js       # SQLite setup
+│   │   ├── middleware/auth.js       # JWT verification
+│   │   ├── routes/
+│   │   │   ├── auth.js             # Login/logout
+│   │   │   ├── projects.js         # CRUD operations
+│   │   │   └── dashboard.js        # Statistics
+│   │   ├── models/init.js          # DB initialization
+│   │   └── server.js               # Express app
+│   ├── package.json
+│   └── .env.example
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── Navbar.jsx
+│   │   │   ├── StatCard.jsx
+│   │   │   ├── ProjectCard.jsx
+│   │   │   └── ProjectForm.jsx
+│   │   ├── pages/
+│   │   │   ├── Login.jsx
+│   │   │   ├── Dashboard.jsx
+│   │   │   ├── Projects.jsx
+│   │   │   └── DemoShowcase.jsx
+│   │   ├── services/api.js
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   └── index.js
+│   ├── package.json
+│   └── .env.example
+├── setup.sh                         # Complete setup script
+├── start.sh                         # Start both servers
+├── stop.sh                          # Stop all servers
+├── fix.sh                           # Quick fix script
+├── README.md
+├── MACOS_QUICKSTART.md             # macOS quick start
+├── MACOS_SETUP.md                  # macOS troubleshooting
+├── QUICKSTART.md
+├── API.md
+└── .gitignore
+```
+
 ## Development
 
 ### Backend Development
@@ -202,6 +242,63 @@ npm run dev  # Uses nodemon for auto-restart
 ```bash
 cd frontend
 npm start  # React dev server with hot reload
+```
+
+## Troubleshooting
+
+### Port Already in Use
+
+**macOS/Linux:**
+```bash
+./fix.sh
+```
+
+**Manual:**
+```bash
+# Kill process on port 5001 (backend)
+lsof -ti:5001 | xargs kill -9
+
+# Kill process on port 3000 (frontend)
+lsof -ti:3000 | xargs kill -9
+```
+
+**Windows:**
+```cmd
+netstat -ano | findstr :5001
+taskkill /PID <PID> /F
+
+netstat -ano | findstr :3000
+taskkill /PID <PID> /F
+```
+
+### Node Version Issues (M1/M2 Mac)
+
+**Error:** `node-gyp rebuild failed` or `C++20 required`
+
+**Solution:**
+```bash
+# Install Node v20 LTS
+nvm install 20
+nvm use 20
+
+# Re-run setup
+./setup.sh
+```
+
+See [MACOS_SETUP.md](MACOS_SETUP.md) for detailed troubleshooting.
+
+### API Connection Failed
+
+1. Verify backend is running: `curl http://localhost:5001/health`
+2. Check frontend `.env` has: `REACT_APP_API_URL=http://localhost:5001/api`
+3. Check backend `.env` has: `PORT=5001`
+4. Restart both servers
+
+### Reset Database
+
+```bash
+rm backend/database.sqlite
+cd backend && npm start
 ```
 
 ## Production Build
@@ -227,21 +324,14 @@ npm run build
 4. **Enable CORS** only for trusted domains in production
 5. **Add rate limiting** for API endpoints in production
 
-## Troubleshooting
+## Documentation
 
-### Backend won't start
-- Check if port 5000 is available
-- Verify all dependencies are installed: `npm install`
-- Check .env file exists and is configured
-
-### Frontend won't connect to backend
-- Verify backend is running on port 5000
-- Check REACT_APP_API_URL in frontend/.env
-- Check browser console for CORS errors
-
-### Database errors
-- Delete database.sqlite and restart backend to recreate
-- Check file permissions on database.sqlite
+- [README.md](README.md) - This file
+- [MACOS_QUICKSTART.md](MACOS_QUICKSTART.md) - macOS one-command setup
+- [MACOS_SETUP.md](MACOS_SETUP.md) - macOS detailed troubleshooting
+- [QUICKSTART.md](QUICKSTART.md) - 5-minute quick start
+- [API.md](API.md) - Complete API documentation
+- [SUMMARY.md](SUMMARY.md) - Project overview
 
 ## License
 
@@ -249,4 +339,8 @@ Private - AEVON Internal Use Only
 
 ## Support
 
-For issues or questions, contact the development team.
+For issues or questions:
+1. Check [MACOS_SETUP.md](MACOS_SETUP.md) for macOS-specific issues
+2. Check [QUICKSTART.md](QUICKSTART.md) for general setup
+3. Review [API.md](API.md) for API documentation
+4. Contact the development team
