@@ -18,17 +18,39 @@ function Dashboard() {
       setLoading(true);
       setError('');
       
+      console.log('Fetching dashboard stats...');
       const response = await dashboardAPI.getStats();
-      console.log('Dashboard stats response:', response); // Debug log
+      console.log('Dashboard API response:', response);
       
       if (response && response.data) {
+        console.log('Stats data:', response.data);
         setStats(response.data);
       } else {
+        console.error('Invalid response format:', response);
         throw new Error('Invalid response format');
       }
     } catch (err) {
-      console.error('Dashboard error:', err);
-      setError(err.response?.data?.error || err.message || 'Failed to load dashboard statistics');
+      console.error('Dashboard error details:', {
+        message: err.message,
+        response: err.response,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      
+      let errorMessage = 'Failed to fetch dashboard statistics';
+      
+      if (err.response?.status === 401) {
+        errorMessage = 'Please login again';
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (err.response?.status === 500) {
+        errorMessage = 'Server error. Please check backend logs.';
+      } else if (err.message === 'Network Error') {
+        errorMessage = 'Cannot connect to backend. Is it running on port 5001?';
+      }
+      
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -55,11 +77,12 @@ function Dashboard() {
       <div className="page-container">
         <div className="error-message">
           <h3>⚠️ {error}</h3>
-          <p>Please check:</p>
+          <p>Troubleshooting steps:</p>
           <ul>
-            <li>Backend server is running on port 5001</li>
-            <li>You are logged in</li>
-            <li>Database is initialized with demo data</li>
+            <li>Check if backend is running: <code>http://localhost:5001/health</code></li>
+            <li>Check browser console (F12) for detailed errors</li>
+            <li>Verify you're logged in (check localStorage for token)</li>
+            <li>Try logging out and logging in again</li>
           </ul>
           <button onClick={fetchStats} className="btn-primary">Retry</button>
         </div>
@@ -78,7 +101,7 @@ function Dashboard() {
     );
   }
 
-  // Format currency in INR (₹)
+  // Format currency in INR (₹) - just symbol change, no conversion
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('en-IN', {
       style: 'currency',
