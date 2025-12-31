@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { dashboardAPI } from '../services/api';
 import StatCard from '../components/StatCard';
+import '../Dashboard.css';
 
 function Dashboard() {
   const [stats, setStats] = useState(null);
@@ -65,8 +66,10 @@ function Dashboard() {
   return (
     <div className="page-container">
       <div className="page-header">
-        <h1>Dashboard</h1>
-        <p>Business overview and statistics</p>
+        <div>
+          <h1>Dashboard</h1>
+          <p>Business overview and statistics</p>
+        </div>
       </div>
 
       {/* Projects Statistics */}
