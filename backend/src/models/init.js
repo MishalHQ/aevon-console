@@ -165,15 +165,15 @@ function seedDemoData() {
   const clientIds = clients.map(c => insertClient.run(...c).lastInsertRowid);
   console.log('✅ Seeded 7 clients');
 
-  // Seed Business Projects (Budget in INR)
+  // Seed Business Projects (Realistic startup amounts - just ₹ instead of $)
   const projects = [
-    ['Enterprise CRM System', 'Custom CRM solution with advanced analytics', 'Business', 'Active', 'React, Node.js, PostgreSQL, AWS', 1, clientIds[0], '2024-01-15', '2024-06-30', 3735000],
-    ['Digital Marketing Platform', 'Marketing automation with campaign management', 'Business', 'Active', 'Vue.js, Python, MongoDB, Google Cloud', 1, clientIds[1], '2024-02-01', '2024-07-15', 3154000],
-    ['Healthcare Patient Portal', 'HIPAA-compliant patient portal with telemedicine', 'Business', 'Completed', 'React, .NET Core, SQL Server, Azure', 1, clientIds[2], '2023-09-01', '2024-03-31', 4316000],
-    ['Financial Trading Dashboard', 'Real-time trading dashboard with market data', 'Business', 'Active', 'Angular, Java Spring, Oracle, WebSocket', 1, clientIds[3], '2024-03-01', '2024-09-30', 5644000],
-    ['E-commerce Platform Redesign', 'Complete redesign with improved UX', 'Business', 'Active', 'Next.js, Node.js, Redis, Stripe, Vercel', 1, clientIds[4], '2024-01-20', '2024-05-30', 3486000],
-    ['Learning Management System', 'Custom LMS with video streaming', 'Business', 'Completed', 'React, Django, PostgreSQL, AWS S3', 1, clientIds[5], '2023-08-01', '2024-02-28', 2905000],
-    ['Property Management System', 'Comprehensive property management solution', 'Business', 'Planned', 'React Native, Node.js, MongoDB, Stripe', 1, clientIds[6], '2024-05-01', '2024-11-30', 3984000]
+    ['Enterprise CRM System', 'Custom CRM solution with advanced analytics', 'Business', 'Active', 'React, Node.js, PostgreSQL, AWS', 1, clientIds[0], '2024-01-15', '2024-06-30', 45000],
+    ['Digital Marketing Platform', 'Marketing automation with campaign management', 'Business', 'Active', 'Vue.js, Python, MongoDB, Google Cloud', 1, clientIds[1], '2024-02-01', '2024-07-15', 38000],
+    ['Healthcare Patient Portal', 'HIPAA-compliant patient portal with telemedicine', 'Business', 'Completed', 'React, .NET Core, SQL Server, Azure', 1, clientIds[2], '2023-09-01', '2024-03-31', 52000],
+    ['Financial Trading Dashboard', 'Real-time trading dashboard with market data', 'Business', 'Active', 'Angular, Java Spring, Oracle, WebSocket', 1, clientIds[3], '2024-03-01', '2024-09-30', 68000],
+    ['E-commerce Platform Redesign', 'Complete redesign with improved UX', 'Business', 'Active', 'Next.js, Node.js, Redis, Stripe, Vercel', 1, clientIds[4], '2024-01-20', '2024-05-30', 42000],
+    ['Learning Management System', 'Custom LMS with video streaming', 'Business', 'Completed', 'React, Django, PostgreSQL, AWS S3', 1, clientIds[5], '2023-08-01', '2024-02-28', 35000],
+    ['Property Management System', 'Comprehensive property management solution', 'Business', 'Planned', 'React Native, Node.js, MongoDB, Stripe', 1, clientIds[6], '2024-05-01', '2024-11-30', 48000]
   ];
 
   const insertProject = db.prepare('INSERT INTO projects (name, description, type, status, tech_stack, is_demo, client_id, start_date, end_date, budget) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
@@ -208,24 +208,24 @@ function seedDemoData() {
   tasks.forEach(t => insertTask.run(...t));
   console.log('✅ Seeded 16 tasks');
 
-  // Seed Leads (Potential value in INR)
+  // Seed Leads (Realistic amounts - just ₹ instead of $)
   const leads = [
-    ['Robert Martinez', 'robert.m@startup.io', '+91 98765 43220', 'StartupHub Ventures', 'Website', 'Contacted', 2075000, 'MVP development interest'],
-    ['Jennifer Lee', 'jennifer.lee@retailco.com', '+91 98765 43221', 'RetailCo Chain', 'LinkedIn', 'Negotiation', 4565000, 'Inventory system, budget approved'],
-    ['Thomas Brown', 'thomas.b@consulting.com', '+91 98765 43222', 'Brown Consulting', 'Referral', 'Proposal Sent', 2656000, 'Client portal needed'],
-    ['Amanda White', 'amanda.white@nonprofit.org', '+91 98765 43223', 'Community Nonprofit', 'Conference', 'Contacted', 1494000, 'Limited budget'],
-    ['Christopher Davis', 'chris.davis@manufacturing.com', '+91 98765 43224', 'Davis Manufacturing', 'Cold Outreach', 'Closed Won', 5976000, 'Contract signed']
+    ['Robert Martinez', 'robert.m@startup.io', '+91 98765 43220', 'StartupHub Ventures', 'Website', 'Contacted', 25000, 'MVP development interest'],
+    ['Jennifer Lee', 'jennifer.lee@retailco.com', '+91 98765 43221', 'RetailCo Chain', 'LinkedIn', 'Negotiation', 55000, 'Inventory system, budget approved'],
+    ['Thomas Brown', 'thomas.b@consulting.com', '+91 98765 43222', 'Brown Consulting', 'Referral', 'Proposal Sent', 32000, 'Client portal needed'],
+    ['Amanda White', 'amanda.white@nonprofit.org', '+91 98765 43223', 'Community Nonprofit', 'Conference', 'Contacted', 18000, 'Limited budget'],
+    ['Christopher Davis', 'chris.davis@manufacturing.com', '+91 98765 43224', 'Davis Manufacturing', 'Cold Outreach', 'Closed Won', 72000, 'Contract signed']
   ];
 
   const insertLead = db.prepare('INSERT INTO leads (name, email, phone, company, source, stage, potential_value, notes) VALUES (?, ?, ?, ?, ?, ?, ?, ?)');
   leads.forEach(l => insertLead.run(...l));
   console.log('✅ Seeded 5 leads');
 
-  // Seed Services (Price in INR)
+  // Seed Services (Realistic pricing - just ₹ instead of $)
   const services = [
-    ['Custom Web Application', 'Full-stack web development', 2905000, 'Development', '3-6 months', '["Custom Design","Responsive Frontend","Backend API","Database","Cloud Deploy","3mo Support"]'],
-    ['Mobile App Development', 'iOS and Android apps', 3735000, 'Development', '4-8 months', '["iOS & Android","Native Performance","Push Notifications","Offline Mode","App Store","6mo Support"]'],
-    ['System Integration', 'API and system integration', 2324000, 'Integration', '2-4 months', '["API Development","Third-party Integration","Data Migration","Optimization","Documentation","2mo Support"]']
+    ['Custom Web Application', 'Full-stack web development', 35000, 'Development', '3-6 months', '["Custom Design","Responsive Frontend","Backend API","Database","Cloud Deploy","3mo Support"]'],
+    ['Mobile App Development', 'iOS and Android apps', 45000, 'Development', '4-8 months', '["iOS & Android","Native Performance","Push Notifications","Offline Mode","App Store","6mo Support"]'],
+    ['System Integration', 'API and system integration', 28000, 'Integration', '2-4 months', '["API Development","Third-party Integration","Data Migration","Optimization","Documentation","2mo Support"]']
   ];
 
   const insertService = db.prepare('INSERT INTO services (name, description, price, category, duration, features) VALUES (?, ?, ?, ?, ?, ?)');
@@ -237,7 +237,7 @@ function seedDemoData() {
     [adminId, 'Project Completed', 'Healthcare Patient Portal delivered successfully', 'success'],
     [adminId, 'New Lead Converted', 'Christopher Davis signed contract!', 'success'],
     [adminId, 'Task Due Soon', 'Real-time streaming task due in 3 days', 'warning'],
-    [adminId, 'Payment Received', '₹43,16,000 from HealthPlus Medical', 'success']
+    [adminId, 'Payment Received', '₹52,000 from HealthPlus Medical', 'success']
   ];
 
   const insertNotification = db.prepare('INSERT INTO notifications (user_id, title, message, type) VALUES (?, ?, ?, ?)');
