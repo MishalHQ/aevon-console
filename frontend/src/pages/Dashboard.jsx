@@ -1,4 +1,4 @@
-// Dashboard page
+// Dashboard page - Enhanced with Business Statistics
 import React, { useState, useEffect } from 'react';
 import { dashboardAPI } from '../services/api';
 import StatCard from '../components/StatCard';
@@ -15,52 +15,232 @@ function Dashboard() {
   const fetchStats = async () => {
     try {
       const response = await dashboardAPI.getStats();
+      console.log('Dashboard stats:', response.data); // Debug log
       setStats(response.data);
     } catch (err) {
       setError('Failed to load dashboard statistics');
-      console.error(err);
+      console.error('Dashboard error:', err);
     } finally {
       setLoading(false);
     }
   };
 
   if (loading) {
-    return <div className="loading">Loading dashboard...</div>;
+    return (
+      <div className="page-container">
+        <div className="loading-skeleton">
+          <div className="skeleton-header"></div>
+          <div className="stats-grid">
+            <div className="skeleton-card"></div>
+            <div className="skeleton-card"></div>
+            <div className="skeleton-card"></div>
+            <div className="skeleton-card"></div>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="error-message">{error}</div>;
+    return (
+      <div className="page-container">
+        <div className="error-message">
+          <h3>⚠️ {error}</h3>
+          <button onClick={fetchStats} className="btn-primary">Retry</button>
+        </div>
+      </div>
+    );
   }
+
+  // Format currency
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(amount || 0);
+  };
 
   return (
     <div className="page-container">
       <div className="page-header">
         <h1>Dashboard</h1>
-        <p>Overview of all projects</p>
+        <p>Business overview and statistics</p>
       </div>
 
+      {/* Projects Statistics */}
+      <div className="section-header">
+        <h2>Projects</h2>
+      </div>
       <div className="stats-grid">
         <StatCard 
           title="Total Projects" 
-          value={stats?.totalProjects || 0}
-          color="#3b82f6"
+          value={stats?.projects?.total || 0}
+          color="#E50914"
+          icon="📊"
         />
         <StatCard 
           title="Active Projects" 
-          value={stats?.activeProjects || 0}
-          color="#10b981"
+          value={stats?.projects?.active || 0}
+          color="#46D369"
+          icon="🚀"
         />
         <StatCard 
           title="Completed Projects" 
-          value={stats?.completedProjects || 0}
-          color="#6366f1"
+          value={stats?.projects?.completed || 0}
+          color="#0080FF"
+          icon="✅"
         />
         <StatCard 
-          title="Demo Projects" 
-          value={stats?.demoProjects || 0}
-          color="#ec4899"
+          title="Planned Projects" 
+          value={stats?.projects?.planned || 0}
+          color="#FFD700"
+          icon="📅"
         />
       </div>
+
+      {/* Business Statistics */}
+      <div className="section-header">
+        <h2>Business</h2>
+      </div>
+      <div className="stats-grid">
+        <StatCard 
+          title="Total Clients" 
+          value={stats?.clients?.total || 0}
+          color="#E50914"
+          icon="👥"
+        />
+        <StatCard 
+          title="Active Clients" 
+          value={stats?.clients?.active || 0}
+          color="#46D369"
+          icon="✨"
+        />
+        <StatCard 
+          title="Total Leads" 
+          value={stats?.leads?.total || 0}
+          color="#FFD700"
+          icon="🎯"
+        />
+        <StatCard 
+          title="Lead Value" 
+          value={formatCurrency(stats?.leads?.totalValue || 0)}
+          color="#0080FF"
+          icon="💰"
+        />
+      </div>
+
+      {/* Tasks Statistics */}
+      <div className="section-header">
+        <h2>Tasks</h2>
+      </div>
+      <div className="stats-grid">
+        <StatCard 
+          title="Total Tasks" 
+          value={stats?.tasks?.total || 0}
+          color="#E50914"
+          icon="📋"
+        />
+        <StatCard 
+          title="In Progress" 
+          value={stats?.tasks?.inProgress || 0}
+          color="#FFD700"
+          icon="⏳"
+        />
+        <StatCard 
+          title="Completed" 
+          value={stats?.tasks?.done || 0}
+          color="#46D369"
+          icon="✅"
+        />
+        <StatCard 
+          title="Completion Rate" 
+          value={`${stats?.tasks?.completionRate || 0}%`}
+          color="#0080FF"
+          icon="📈"
+        />
+      </div>
+
+      {/* Revenue Statistics */}
+      <div className="section-header">
+        <h2>Revenue</h2>
+      </div>
+      <div className="stats-grid">
+        <StatCard 
+          title="Total Revenue" 
+          value={formatCurrency(stats?.revenue?.total || 0)}
+          color="#E50914"
+          icon="💵"
+        />
+        <StatCard 
+          title="Completed" 
+          value={formatCurrency(stats?.revenue?.completed || 0)}
+          color="#46D369"
+          icon="✅"
+        />
+        <StatCard 
+          title="Active" 
+          value={formatCurrency(stats?.revenue?.active || 0)}
+          color="#FFD700"
+          icon="🚀"
+        />
+        <StatCard 
+          title="Projected" 
+          value={formatCurrency(stats?.revenue?.projected || 0)}
+          color="#0080FF"
+          icon="📊"
+        />
+      </div>
+
+      {/* Recent Activity */}
+      {stats?.recentActivity && (
+        <>
+          <div className="section-header">
+            <h2>Recent Activity</h2>
+          </div>
+          
+          <div className="recent-activity-grid">
+            {/* Recent Projects */}
+            <div className="activity-section">
+              <h3>Recent Projects</h3>
+              <div className="activity-list">
+                {stats.recentActivity.projects?.slice(0, 5).map((project) => (
+                  <div key={project.id} className="activity-item">
+                    <div className="activity-icon">📁</div>
+                    <div className="activity-content">
+                      <h4>{project.name}</h4>
+                      <p>{project.client_company || 'No client'} • {project.status}</p>
+                    </div>
+                    <span className={`status-badge status-${project.status.toLowerCase()}`}>
+                      {project.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Recent Tasks */}
+            <div className="activity-section">
+              <h3>Recent Tasks</h3>
+              <div className="activity-list">
+                {stats.recentActivity.tasks?.slice(0, 5).map((task) => (
+                  <div key={task.id} className="activity-item">
+                    <div className="activity-icon">✓</div>
+                    <div className="activity-content">
+                      <h4>{task.title}</h4>
+                      <p>{task.project_name || 'No project'}</p>
+                    </div>
+                    <span className={`status-badge status-${task.status.toLowerCase().replace(' ', '-')}`}>
+                      {task.status}
+                    </span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
