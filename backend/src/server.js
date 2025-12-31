@@ -1,4 +1,4 @@
-// AEVON Console Backend Server - Production Ready
+// AEVON Console Backend Server - Production Ready with Business Features
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -11,6 +11,10 @@ initDatabase();
 const authRoutes = require('./routes/auth');
 const projectRoutes = require('./routes/projects');
 const dashboardRoutes = require('./routes/dashboard');
+const clientRoutes = require('./routes/clients');
+const taskRoutes = require('./routes/tasks');
+const leadRoutes = require('./routes/leads');
+const serviceRoutes = require('./routes/services');
 
 // Create Express app
 const app = express();
@@ -57,7 +61,8 @@ app.get('/health', (req, res) => {
     status: 'ok', 
     message: 'AEVON Console API is running',
     environment: NODE_ENV,
-    timestamp: new Date().toISOString()
+    timestamp: new Date().toISOString(),
+    features: ['auth', 'projects', 'clients', 'tasks', 'leads', 'services']
   });
 });
 
@@ -71,7 +76,11 @@ app.get('/', (req, res) => {
       health: '/health',
       auth: '/api/auth',
       projects: '/api/projects',
-      dashboard: '/api/dashboard'
+      dashboard: '/api/dashboard',
+      clients: '/api/clients',
+      tasks: '/api/tasks',
+      leads: '/api/leads',
+      services: '/api/services'
     }
   });
 });
@@ -80,6 +89,10 @@ app.get('/', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/clients', clientRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/leads', leadRoutes);
+app.use('/api/services', serviceRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -111,6 +124,7 @@ const server = app.listen(PORT, () => {
   console.log(`📡 Server running on http://localhost:${PORT}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
+  console.log('✨ Features: Projects, Clients, Tasks, Leads, Services');
   console.log('');
 });
 
