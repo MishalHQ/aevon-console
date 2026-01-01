@@ -1,11 +1,12 @@
-// Main App component with routing
+// Secure Admin Console - Main App Component
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Users from './pages/Users';
 import Projects from './pages/Projects';
-import DemoShowcase from './pages/DemoShowcase';
+import AuditLogs from './pages/AuditLogs';
 import './App.css';
 
 // Protected route wrapper
@@ -22,7 +23,6 @@ function App() {
         <Routes>
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
-          <Route path="/demos" element={<DemoShowcase />} />
           
           {/* Protected routes */}
           <Route 
@@ -34,10 +34,26 @@ function App() {
             } 
           />
           <Route 
+            path="/users" 
+            element={
+              <ProtectedRoute>
+                <Users />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
             path="/projects" 
             element={
               <ProtectedRoute>
                 <Projects />
+              </ProtectedRoute>
+            } 
+          />
+          <Route 
+            path="/audit-logs" 
+            element={
+              <ProtectedRoute>
+                <AuditLogs />
               </ProtectedRoute>
             } 
           />
