@@ -1,4 +1,4 @@
-// AEVON Console Backend Server - Production Ready with Business Features
+// Secure Admin Console - Backend Server
 require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
@@ -9,32 +9,27 @@ initDatabase();
 
 // Import routes
 const authRoutes = require('./routes/auth');
-const projectRoutes = require('./routes/projects');
+const usersRoutes = require('./routes/users');
+const projectsRoutes = require('./routes/projects');
+const auditLogsRoutes = require('./routes/audit-logs');
 const dashboardRoutes = require('./routes/dashboard');
-const clientRoutes = require('./routes/clients');
-const taskRoutes = require('./routes/tasks');
-const leadRoutes = require('./routes/leads');
-const serviceRoutes = require('./routes/services');
 
 // Create Express app
 const app = express();
 const PORT = process.env.PORT || 5001;
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
-// CORS configuration - Allow multiple origins
+// CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
-  'https://aevon-console.vercel.app',
   process.env.FRONTEND_URL
 ].filter(Boolean);
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (mobile apps, Postman, etc.)
     if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || origin.includes('vercel.app')) {
+    if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
       callback(null, true); // Allow all in development
@@ -47,7 +42,7 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Request logging (only in development)
+// Request logging (development only)
 if (NODE_ENV === 'development') {
   app.use((req, res, next) => {
     console.log(`${req.method} ${req.path}`);
@@ -59,40 +54,41 @@ if (NODE_ENV === 'development') {
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok', 
-    message: 'AEVON Console API is running',
+    message: 'Secure Admin Console API is running',
     environment: NODE_ENV,
     timestamp: new Date().toISOString(),
-    features: ['auth', 'projects', 'clients', 'tasks', 'leads', 'services']
+    version: '1.0.0'
   });
 });
 
 // Root endpoint
 app.get('/', (req, res) => {
   res.json({
-    name: 'AEVON Console API',
-    version: '2.0.0',
+    name: 'Secure Admin Console API',
+    version: '1.0.0',
     status: 'running',
+    description: 'Internal admin system for managing users, projects, and system activity',
     endpoints: {
       health: '/health',
       auth: '/api/auth',
+      users: '/api/users',
       projects: '/api/projects',
-      dashboard: '/api/dashboard',
-      clients: '/api/clients',
-      tasks: '/api/tasks',
-      leads: '/api/leads',
-      services: '/api/services'
+      auditLogs: '/api/audit-logs',
+      dashboard: '/api/dashboard'
+    },
+    security: {
+      authentication: 'JWT',
+      roles: ['ADMIN', 'VIEWER']
     }
   });
 });
 
 // API routes
 app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/projects', projectsRoutes);
+app.use('/api/audit-logs', auditLogsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/clients', clientRoutes);
-app.use('/api/tasks', taskRoutes);
-app.use('/api/leads', leadRoutes);
-app.use('/api/services', serviceRoutes);
 
 // 404 handler
 app.use((req, res) => {
@@ -120,11 +116,11 @@ app.use((err, req, res, next) => {
 // Start server
 const server = app.listen(PORT, () => {
   console.log('');
-  console.log('🚀 AEVON Console Backend v2.0');
+  console.log('🔒 Secure Admin Console v1.0');
   console.log(`📡 Server running on http://localhost:${PORT}`);
   console.log(`🏥 Health check: http://localhost:${PORT}/health`);
   console.log(`🌍 Environment: ${NODE_ENV}`);
-  console.log('✨ Features: Projects, Clients, Tasks, Leads, Services');
+  console.log('🔐 Features: Auth, Users, Projects, Audit Logs');
   console.log('');
 });
 
