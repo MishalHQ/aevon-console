@@ -84,8 +84,15 @@ function seedDemoData() {
 
   console.log('🌱 Seeding demo data...');
 
-  // Get admin user
-  const admin = db.prepare('SELECT id, email FROM users WHERE role = ?').get('ADMIN');
+  // Get admin user - with better error handling
+  const admin = db.prepare('SELECT id, email FROM users WHERE role = ? LIMIT 1').get('ADMIN');
+  
+  if (!admin) {
+    console.error('❌ Error: Admin user not found! Cannot seed demo data.');
+    return;
+  }
+
+  console.log('✅ Found admin user:', admin.email);
 
   // Create demo viewer user
   const hashedPassword = bcrypt.hashSync('viewer123', 10);
