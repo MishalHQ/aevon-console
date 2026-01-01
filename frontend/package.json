@@ -1,7 +1,7 @@
 {
-  "name": "aevon-console-frontend",
+  "name": "secure-admin-console-frontend",
   "version": "1.0.0",
-  "description": "AEVON Console Frontend",
+  "description": "Secure Admin Console - React Frontend",
   "private": true,
   "dependencies": {
     "react": "^18.2.0",
