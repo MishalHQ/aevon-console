@@ -1,41 +1,47 @@
-// Projects routes - CRUD operations
+// Secure Admin Console - Projects Management Routes
 const express = require('express');
 const db = require('../config/database');
-const { authenticateToken } = require('../middleware/auth');
+const { authenticateToken, requireAdmin, requireAuth, logAudit } = require('../middleware/auth');
 
 const router = express.Router();
 
-// GET /api/projects - Get all projects (protected)
-router.get('/', authenticateToken, (req, res) => {
+// GET /api/projects - List all projects (All authenticated users)
+router.get('/', authenticateToken, requireAuth, (req, res) => {
   try {
-    const projects = db.prepare('SELECT * FROM projects ORDER BY created_at DESC').all();
+    const projects = db.prepare(`
+      SELECT 
+        p.*,
+        u.name as owner_name,
+        u.email as owner_email
+      FROM projects p
+      LEFT JOIN users u ON p.owner_id = u.id
+      ORDER BY p.created_at DESC
+    `).all();
+
     res.json(projects);
   } catch (error) {
-    console.error('Get projects error:', error);
+    console.error('List projects error:', error);
     res.status(500).json({ error: 'Failed to fetch projects' });
   }
 });
 
-// GET /api/projects/demos - Get demo projects (public)
-router.get('/demos', (req, res) => {
+// GET /api/projects/:id - Get single project (All authenticated users)
+router.get('/:id', authenticateToken, requireAuth, (req, res) => {
   try {
-    const demos = db.prepare('SELECT * FROM projects WHERE is_demo = 1 ORDER BY created_at DESC').all();
-    res.json(demos);
-  } catch (error) {
-    console.error('Get demos error:', error);
-    res.status(500).json({ error: 'Failed to fetch demo projects' });
-  }
-});
+    const project = db.prepare(`
+      SELECT 
+        p.*,
+        u.name as owner_name,
+        u.email as owner_email
+      FROM projects p
+      LEFT JOIN users u ON p.owner_id = u.id
+      WHERE p.id = ?
+    `).get(req.params.id);
 
-// GET /api/projects/:id - Get single project (protected)
-router.get('/:id', authenticateToken, (req, res) => {
-  try {
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
-    
     if (!project) {
       return res.status(404).json({ error: 'Project not found' });
     }
-    
+
     res.json(project);
   } catch (error) {
     console.error('Get project error:', error);
@@ -43,49 +49,52 @@ router.get('/:id', authenticateToken, (req, res) => {
   }
 });
 
-// POST /api/projects - Create new project (protected)
-router.post('/', authenticateToken, (req, res) => {
+// POST /api/projects - Create new project (ADMIN only)
+router.post('/', authenticateToken, requireAdmin, logAudit('PROJECT_CREATED'), (req, res) => {
   try {
-    const { name, type, status, description, tech_stack, is_demo } = req.body;
+    const { name, status, description } = req.body;
 
-    // Validate required fields
-    if (!name || !type || !status) {
-      return res.status(400).json({ error: 'Name, type, and status are required' });
+    // Validation
+    if (!name || !status) {
+      return res.status(400).json({ 
+        error: 'Name and status are required' 
+      });
     }
 
-    // Validate type
-    const validTypes = ['Business', 'Student', 'Internal Demo'];
-    if (!validTypes.includes(type)) {
-      return res.status(400).json({ error: 'Invalid project type' });
+    if (!['active', 'completed', 'archived'].includes(status)) {
+      return res.status(400).json({ 
+        error: 'Invalid status. Must be active, completed, or archived' 
+      });
     }
 
-    // Validate status
-    const validStatuses = ['Planned', 'Active', 'Completed'];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ error: 'Invalid project status' });
-    }
-
-    // Insert project
+    // Create project with current user as owner
     const result = db.prepare(`
-      INSERT INTO projects (name, type, status, description, tech_stack, is_demo)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `).run(name, type, status, description || '', tech_stack || '', is_demo ? 1 : 0);
+      INSERT INTO projects (name, status, description, owner_id)
+      VALUES (?, ?, ?, ?)
+    `).run(name, status, description || '', req.user.id);
 
     // Get created project
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(result.lastInsertRowid);
+    const project = db.prepare(`
+      SELECT 
+        p.*,
+        u.name as owner_name,
+        u.email as owner_email
+      FROM projects p
+      LEFT JOIN users u ON p.owner_id = u.id
+      WHERE p.id = ?
+    `).get(result.lastInsertRowid);
 
     res.status(201).json(project);
-
   } catch (error) {
     console.error('Create project error:', error);
     res.status(500).json({ error: 'Failed to create project' });
   }
 });
 
-// PUT /api/projects/:id - Update project (protected)
-router.put('/:id', authenticateToken, (req, res) => {
+// PUT /api/projects/:id - Update project (ADMIN only)
+router.put('/:id', authenticateToken, requireAdmin, logAudit('PROJECT_UPDATED'), (req, res) => {
   try {
-    const { name, type, status, description, tech_stack, is_demo } = req.body;
+    const { name, status, description } = req.body;
 
     // Check if project exists
     const existing = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
@@ -93,50 +102,45 @@ router.put('/:id', authenticateToken, (req, res) => {
       return res.status(404).json({ error: 'Project not found' });
     }
 
-    // Validate type if provided
-    if (type) {
-      const validTypes = ['Business', 'Student', 'Internal Demo'];
-      if (!validTypes.includes(type)) {
-        return res.status(400).json({ error: 'Invalid project type' });
-      }
-    }
-
     // Validate status if provided
-    if (status) {
-      const validStatuses = ['Planned', 'Active', 'Completed'];
-      if (!validStatuses.includes(status)) {
-        return res.status(400).json({ error: 'Invalid project status' });
-      }
+    if (status && !['active', 'completed', 'archived'].includes(status)) {
+      return res.status(400).json({ 
+        error: 'Invalid status. Must be active, completed, or archived' 
+      });
     }
 
     // Update project
     db.prepare(`
-      UPDATE projects 
-      SET name = ?, type = ?, status = ?, description = ?, tech_stack = ?, is_demo = ?, updated_at = CURRENT_TIMESTAMP
+      UPDATE projects
+      SET name = ?, status = ?, description = ?, updated_at = CURRENT_TIMESTAMP
       WHERE id = ?
     `).run(
-      name || existing.name,
-      type || existing.type,
-      status || existing.status,
+      name !== undefined ? name : existing.name,
+      status !== undefined ? status : existing.status,
       description !== undefined ? description : existing.description,
-      tech_stack !== undefined ? tech_stack : existing.tech_stack,
-      is_demo !== undefined ? (is_demo ? 1 : 0) : existing.is_demo,
       req.params.id
     );
 
     // Get updated project
-    const project = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
+    const project = db.prepare(`
+      SELECT 
+        p.*,
+        u.name as owner_name,
+        u.email as owner_email
+      FROM projects p
+      LEFT JOIN users u ON p.owner_id = u.id
+      WHERE p.id = ?
+    `).get(req.params.id);
 
     res.json(project);
-
   } catch (error) {
     console.error('Update project error:', error);
     res.status(500).json({ error: 'Failed to update project' });
   }
 });
 
-// DELETE /api/projects/:id - Delete project (protected)
-router.delete('/:id', authenticateToken, (req, res) => {
+// DELETE /api/projects/:id - Delete project (ADMIN only)
+router.delete('/:id', authenticateToken, requireAdmin, logAudit('PROJECT_DELETED'), (req, res) => {
   try {
     // Check if project exists
     const existing = db.prepare('SELECT * FROM projects WHERE id = ?').get(req.params.id);
@@ -148,7 +152,6 @@ router.delete('/:id', authenticateToken, (req, res) => {
     db.prepare('DELETE FROM projects WHERE id = ?').run(req.params.id);
 
     res.json({ message: 'Project deleted successfully' });
-
   } catch (error) {
     console.error('Delete project error:', error);
     res.status(500).json({ error: 'Failed to delete project' });
